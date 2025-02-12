@@ -85,7 +85,7 @@ export interface Appointment {
   userResponse: UserResponse;
   petResponse: PetResponses;
   bookingDate: string;
-  bookingStatus: 'CONFIRMED' | 'PENDING' | 'CANCELLED';
+  bookingStatus: 'CONFIRMED' | 'PENDING' | 'CANCELED';
   medium: 'VIRTUAL' | 'IN_PERSON';
   reason: string;
   note: string;

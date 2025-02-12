@@ -47,3 +47,13 @@ export async function cancelBooking(id: string) {
     console.log("Error archiving bookings", error);
   }
 }
+
+
+export async function bookingById(id: string) {
+  try {
+    const response = await axiosInstance.get(`/api/v1/booking/${id}`);
+    return response?.data;
+  } catch (error) {
+    console.log("Error archiving bookings", error);
+  }
+}

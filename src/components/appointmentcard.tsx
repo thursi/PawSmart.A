@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
-import { Card, CardContent, } from '@/components/ui/card';
-import {
-  Calendar,
-  Clock,
-  FilePenLine,
-  Video,
-} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Calendar, Clock, FilePenLine, Video } from 'lucide-react';
 import { COLORS } from '@/app/constants/color';
 import ConfirmationDialog from './ConfirmationDialog';
 import { cancelBooking } from '@/api/Appointment/route';
 import { toast } from 'sonner';
 
-// components/appointmentcard.tsx - Add export to the interfaces
 export interface UserResponse {
   id: number;
   firstName: string;
@@ -69,7 +63,7 @@ export interface Appointment {
   userResponse: UserResponse;
   petResponse: PetResponse;
   bookingDate: string;
-  bookingStatus: 'CONFIRMED' | 'PENDING' | 'CANCELLED';
+  bookingStatus: 'CONFIRMED' | 'PENDING' | 'CANCELED';
   medium: 'VIRTUAL' | 'IN_PERSON';
   reason: string;
   note: string;
@@ -77,19 +71,19 @@ export interface Appointment {
   updatedDate: string;
 }
 
-// Rest of your AppointmentCard component code remains the same...
 interface AppointmentCardProps {
   AppointmentList: Appointment[];
-  handleClick: (doctorId: number) => void;
+  handleClick: (appointmentid: number) => void;
+  refreshAppointments: () => void;
 }
 
 const AppointmentCard: React.FC<AppointmentCardProps> = ({
   AppointmentList,
-  // handleClick,
+  handleClick,
+  refreshAppointments
 }) => {
-
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [appointmentToCancel, setAppointmentToCancel] = useState<Appointment>(); 
+  const [appointmentToCancel, setAppointmentToCancel] = useState<Appointment>();
 
   const groupedAppointments = AppointmentList.reduce((acc, appointment) => {
     const date = new Date(appointment.bookingDate);
@@ -105,23 +99,33 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
     return acc;
   }, {} as Record<string, Appointment[]>);
 
+  // const handleEditClick = (appointment: Appointment) => {
+  //   setAppointmentToCancel(appointment);
+  //   setIsDialogOpen(true);
+  // };
+
   const handleEditClick = (appointment: Appointment) => {
-    setAppointmentToCancel(appointment);
-    setIsDialogOpen(true);
-  };
-
-  const handleCancelAppointment = async () => {
-    if (appointmentToCancel) { 
-      const response = await cancelBooking(appointmentToCancel.id);
-    if (response.success) {
-      toast.success(response.message);
-      setIsDialogOpen(false);
-    } else {
-      toast.error(response.message);
-      setIsDialogOpen(false);
-    }
     setIsDialogOpen(false);
-
+    if (appointment.bookingStatus !== 'CANCELED') {
+      setAppointmentToCancel(appointment);
+      setIsDialogOpen(true);
+    } else {
+      setIsDialogOpen(false);
+      alert('This appointment has already been canceled.');
+    }
+  };
+  const handleCancelAppointment = async () => {
+    if (appointmentToCancel) {
+      const response = await cancelBooking(appointmentToCancel.id);
+      if (response.success) {
+        toast.success(response.message);
+        setIsDialogOpen(false);
+        refreshAppointments();
+      } else {
+        toast.error(response.message);
+        setIsDialogOpen(false);
+      }
+      setIsDialogOpen(false);
     }
   };
 
@@ -144,6 +148,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
               <Card
                 key={index}
                 className="relative overflow-hidden hover:shadow-lg transition-shadow"
+                onClick={() => handleClick(Number(appointment.id))}
               >
                 <div
                   className={`absolute left-0 top-0 w-1 h-full ${COLORS.bgGreen}`}
@@ -192,7 +197,10 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
                         {appointment.bookingStatus}
                         <button
                           className="ml-2 text-gray-500 hover:text-gray-700"
-                          onClick={() => handleEditClick(appointment)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditClick(appointment);
+                          }}
                         >
                           <FilePenLine className="w-4 h-4" />
                         </button>
